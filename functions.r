@@ -1,130 +1,3 @@
-plotColramp <- function(x) {
-    tol <- x$params$tol
-    colramp <- x$colramp
-    diffo <- ((colramp[[2]][2] - colramp[[2]][1])/2)
-    image(colramp[[1]], colramp[[2]][-1] - diffo, t(colramp[[3]][1, 
-                                                                 -1]) - diffo, col = colramp[[4]], useRaster = TRUE, ylab = "Distance in mm", 
-          xlab = "", xaxt = "n")
-    if (!is.null(tol)) {
-        if (sum(abs(tol)) != 0) {
-            image(colramp[[1]], c(tol[1], tol[2]), matrix(c(tol[1], 
-                                                            tol[2]), 1, 1), col = "green", useRaster = TRUE, 
-                  add = TRUE)
-        }
-    }
-}
-
-
-reconstructPooled <- function(mylm,mymesh,proc) {
-    atts <- attributes(proc)
-    scale <- atts$scale
-    
-    lm2proc <- align2procSym(mylm,proc)
-    
-    distH <- kendalldist(lm2proc,humMean)
-    
-}
-
-getSSMerror <- function() {
-    origarrAll <<- meshlist2array(matched)##meshslider$dataslide[,,]
-    origarr <<- origarrAll[pubVerts,,]
-    
-    perVertexError <<- sapply(1:n, function(x) x <<- sqrt(rowSums((vert2points(predSSM[[x]])-vert2points(matched[[x]]))[pubVerts,])^2))
-    perVertexErrorMean <<- rowMeans(perVertexError)
-    perVertexErrorPlainSQ <<- sapply(1:n, function(x) x <<- (rowSums(((vert2points(predSSM[[x]])-vert2points(matched[[x]]))[pubVerts,]))^2))
-    RMSEPlain <<- sqrt(mean(perVertexErrorPlainSQ))
-    PVEPlain <<- mean(perVertexError)
-    PVEPlain95 <<- quantile(colMeans(perVertexError),probs = .95)
-    distvec <<- rep(1000,nverts(reference))
-    distvec[pubVerts] <<- perVertexErrorMean
-    mDPlain <<- meshDist(reference,distvec=distvec,tol=1,to=max(distvec[pubVerts])+2,plot = F)
-    
-    ## ERROR TPS
-    perVertexErrorTPS <<- sapply(1:n, function(x) x <<- sqrt(rowSums((vert2points(predSSMTPS[[x]])-vert2points(aligned[[x]]))[pubVerts,])^2))
-    perVertexErrorMeanTPS <<- rowMeans(perVertexErrorTPS)
-    perVertexErrorTPSSQ <<- sapply(1:n, function(x) x <<- rowSums(((vert2points(predSSMTPS[[x]])-vert2points(aligned[[x]]))[pubVerts,])^2))
-    RMSETPS <<- sqrt(mean(perVertexErrorTPSSQ))
-    PVETPS <<- mean(perVertexErrorTPS)
-    PVETPS95 <<- quantile(colMeans(perVertexErrorTPS),probs = .95)
-    distvecTPS <<- rep(1000,nverts(reference))
-    distvecTPS[pubVerts] <<- perVertexErrorMeanTPS
-    mDTPS <<- meshDist(reference,distvec=distvecTPS,tol=1,to=max(distvec[pubVerts])+2,plot = F)
-    
-    ##perVertexError <<- sapply(1:n, function(x) x <<- sqrt(sum((vert2points(predSSM[[x]])-vert2points(alignedIlium[[x]]))[pubVerts,])^2))
-    
-### ERROR ESTIMATION: align pubis separately
-    predSSMarr <<- meshlist2array(predSSM)[pubVerts,,]
-    predalign <<- procSym(bindArr(predSSMarr,origarrAll[pubVerts,,],along=3),CSinit=F,scale = F)
-    perVertexErrorAlign <<- sapply(1:n, function(x) x <<- sqrt(rowSums(predalign$rotated[,,x]-predalign$rotated[,,x+n])^2))
-    perVertexErrorMeanAlign <<- rowMeans(perVertexErrorAlign)
-    perVertexErrorAlignSQ <<- sapply(1:n, function(x) x <<- (rowSums(predalign$rotated[,,x]-predalign$rotated[,,x+n])^2))
-    RMSEAlign <<- sqrt(mean(perVertexErrorAlignSQ))
-    PVEAlign <<- mean(perVertexErrorAlign)
-    PVEAlign95 <<- quantile(colMeans(perVertexErrorAlign),probs = .95)
-    distvecAlign <<- rep(1000,nverts(reference))
-    distvecAlign[pubVerts] <<- perVertexErrorMeanAlign
-    mDalign <<- meshDist(reference,distvec=distvecAlign,tol=1,to=max(distvec[pubVerts])+2,plot = T)
-    ##plot(hclust(dist(predalign$PCscores),method="ward.D"))
-    
-### ERROR ESTIMATION: align pubis separately TPS
-    predSSMarrTPS <<- meshlist2array(predSSMTPS)[pubVerts,,]
-    dimnames(predSSMarrTPS)[[3]] <<- paste0(dimnames(predSSMarrTPS)[[3]],"_pred")
-    predalignTPS <<- procSym(bindArr(predSSMarrTPS,origarr,along=3),CSinit=F,scale = F)
-    perVertexErrorAlignTPS <<- sapply(1:n, function(x) x <<- sqrt(rowSums(predalignTPS$rotated[,,x]-predalignTPS$rotated[,,x+n])^2))
-    perVertexErrorAlignTPSSQ <<- sapply(1:n, function(x) x <<- (rowSums(predalignTPS$rotated[,,x]-predalignTPS$rotated[,,x+n])^2))
-    RMSEAlignTPS <<- sqrt(mean(perVertexErrorAlignTPSSQ))
-    PVEAlignTPS <<- mean(perVertexErrorAlignTPS)
-    PVEAlignTPS95 <<- quantile(colMeans(perVertexErrorAlignTPS),probs = .95)
-    perVertexErrorMeanAlignTPS <<- rowMeans(perVertexErrorAlignTPS)
-    distvecAlignTPS <<- rep(1000,nverts(reference))
-    distvecAlignTPS[pubVerts] <<- perVertexErrorMeanAlignTPS
-    mDalignTPS <<- meshDist(reference,distvec=distvecAlignTPS,tol=1,to=max(distvec[pubVerts])+2,plot = F)
-    ##plot(hclust(dist(predalignTPS$PCscores),method="ward.D"))
-    
-### ERROR ESTIMATION: realign entire structure 
-    predSSMarrAll <<- meshlist2array(predSSM)[,,]
-    predalignAll <<- procSym(bindArr(predSSMarrAll,origarrAll,along=3),CSinit=F,scale = F)
-    perVertexErrorAlignAll <<- sapply(1:n, function(x) x <<- sqrt(rowSums(predalignAll$rotated[pubVerts,,x]-predalignAll$rotated[pubVerts,,x+n])^2))
-    perVertexErrorMeanAlignAll <<- rowMeans(perVertexErrorAlignAll)
-    ## RMSE
-    perVertexErrorAllSQ <<- sapply(1:n, function(x) x <<- (rowSums(predalignAll$rotated[pubVerts,,x]-predalignAll$rotated[pubVerts,,x+n])^2))
-    RMSEAll <<- sqrt(mean(perVertexErrorAllSQ))
-    PVEAll <<- mean(perVertexErrorAlignAll)
-    PVEAll95 <<- quantile(colMeans(perVertexErrorAlignAll),probs = .95)
-    
-    ## Distance vector
-    distvecAlignAll <- rep(1000,nverts(reference))
-    distvecAlignAll[pubVerts] <- perVertexErrorMeanAlignAll
-    mDAll <<- meshDist(reference,distvec=distvecAlignAll,tol=1,to=max(distvec[pubVerts])+2,plot = T)
-    
-### ERROR ESTIMATION: realign entire structure TPS
-    predSSMarrAllTPS <<- meshlist2array(predSSMTPS)[,,]
-    predalignAllTPS <<- procSym(bindArr(predSSMarrAllTPS,origarrAll,along=3),CSinit=F,scale = F)
-    perVertexErrorAlignAllTPS <<- sapply(1:n, function(x) x <<- sqrt(rowSums(predalignAllTPS$rotated[pubVerts,,x]-predalignAllTPS$rotated[pubVerts,,x+n])^2))
-    perVertexErrorMeanAlignAllTPS <<- rowMeans(perVertexErrorAlignAllTPS)
-    ## RMSE
-    perVertexErrorAllTPSSQ <<- sapply(1:n, function(x) x <<- (rowSums(predalignAllTPS$rotated[pubVerts,,x]-predalignAllTPS$rotated[pubVerts,,x+n])^2))
-    RMSEAllTPS <<- sqrt(mean(perVertexErrorAllTPSSQ))
-    PVEAllTPS <<- mean(perVertexErrorAlignAllTPS)
-    PVEAllTPS95 <<- quantile(colMeans(perVertexErrorAlignAllTPS),probs = .95)
-    ## Distance vector
-    distvecAlignAllTPS <<- rep(1000,nverts(reference))
-    distvecAlignAllTPS[pubVerts]<<- perVertexErrorMeanAlignAllTPS
-    mDAllTPS <<- meshDist(reference,distvec=distvecAlignAllTPS,tol=1,to=max(distvec[pubVerts])+2,plot = F)
-    
-    SSMError <<- c(PVEPlain,PVETPS,PVEAlign,PVEAlignTPS,PVEAll,PVEAllTPS)
-    SSMError95 <<- c(PVEPlain95,PVETPS95,PVEAlign95,PVEAlignTPS95,PVEAll95,PVEAllTPS95)
-}
-
-
-getErrorMargins <- function(x,target,verts=predVertsInfo$respVerts) {
-    out <- vcgClostKD(x,target,sign = FALSE)$quality
-    out <- out[verts]
-    return(list(mean=mean(out),q95=quantile(out,probs = .95)))
-    
-}
-
-
 #' ## Necessary objects in global workspace
 #' 
 #' fossil.lm:    landmarks on fossil remain
@@ -136,7 +9,7 @@ getErrorMargins <- function(x,target,verts=predVertsInfo$respVerts) {
 #' meanMesh:     list of vertices of meshes belonging to means in the same order
 #' useweights:   shift SSM mean to weighted average from meanMesh based on inverse Procrustes distance#'
 #' 
-predictFossil <- function(fossil.lm,  mymod, mymod.lm, proc, use.lm=NULL, meanMesh=NULL, means=NULL, useweights=T,target.m=NULL,subs=500,evalverts=NULL,getMod=F,uprange=1,realign2mod=FALSE) {
+predictFossil <- function(fossil.lm,  mymod, mymod.lm, proc, use.lm=NULL, meanMesh=NULL, means=NULL, useweights=T,target.m=NULL,subs=500,evalverts=NULL,getMod=F,uprange=1) {
     weightsL=NULL
     meanmesh=NULL
     align2tar=NULL
@@ -180,15 +53,7 @@ predictFossil <- function(fossil.lm,  mymod, mymod.lm, proc, use.lm=NULL, meanMe
         }       
         outmod=list(model=postmod,f2mod=f2mod)
     }
-
-    if(realign2mod) {
-        mesh2mod <- icp(fossilPredict,DrawMean(mymod),lm1=fossil.lm[use.lm,], lm2=mymod.lm[use.lm,],iterations=50,subsample = 500,rhotol = pi/2,getTransform = T,uprange=uprange)
-        fossilPred2 <- PredictSample(mymod,lmModel=mymod.lm[use.lm,],lmDataset=mesh2mod$landmarks,align=FALSE)
-      ##  mm <- statismoConstrainModelSafe(mymod,pt=mymod.lm[use.lm,],sample=mesh2mod$landmarks,computeScores=T,ptValueNoise=2,sdmax = 7)
-        fossilPred2Back <- icp(applyTransform(fossilPred2,mesh2mod$transform,T),target.m,subsample=2000,iterations=100,rho=pi/2,uprange = uprange)
-
-    }
-    
+ 
     out <- list(predict=fossilPredict,mod=mymod,wt=weightsL,mm=meanmesh,fossil2tar=align2tar,target.m=target.m,error=error,postMod=outmod,predict2=fossilPred2Back)
     class(out) <- "FossilPredict"
     return(out)
@@ -237,7 +102,7 @@ exportPredictionFromList <- function(x,i,folder=".",modname=NULL,colpred="orange
     
 }
 
-
+### compute error my allowing to slide 1000 subsampled vertices on the registered target shape.
 computeErrorNew <- function(x,target,subsample=NULL, slide=T,...) {
     if (is.null(subsample)) {
         subsample <- 1:nverts(x)

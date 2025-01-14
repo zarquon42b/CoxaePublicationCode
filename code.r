@@ -27,7 +27,7 @@ pubVerts <- readRDS("./Data/pubVerts.RDS")
 fossilArray <- readRDS("./Data/fossilArray.RDS")
 testingMesh <- list.files("./TestingData/",full.names=T)
 fossilMesh <- list()
-for(i in 1:9)     
+for(i in 1:5)     
      fossilMesh[[i]] <- vcgImport(testingMesh[grep(dimnames(fossilArray)[[3]][i],testingMesh)])
 
 ### Predict using Human SSM
@@ -82,7 +82,7 @@ predictedFossilsHumPanGor <- list()
 for (i in 1:dim(fossilArray)[3]) {
     f.lm <- fossilArray[,,i]
     f.m <- fossilMesh[[i]]
-    predictedFossilsHumPanGor[[i]] <- predictFossil(f.lm,humpangorMod10,humpangorMod.lm,humpangorProcDef,means=meanlistHPG,meanMesh=humpangorMList,use.lm = predictorrow,useweights = T,target.m = f.m,evalverts=pubVerts,getMod=F,realign2mod=F)
+    predictedFossilsHumPanGor[[i]] <- predictFossil(f.lm,humpangorMod10,humpangorMod.lm,humpangorProcDef,means=meanlistHPG,meanMesh=humpangorMList,use.lm = predictorrow,useweights = T,target.m = f.m,evalverts=pubVerts,getMod=F)
 }
 
 names(predictedFossilsHumPanGor) <- dimnames(fossilArray)[[3]]
@@ -134,9 +134,9 @@ boxplot(newErrorTable)
 
 
 ### Visualize Metaspecies by sampling from hum/pan/gor SSMs
-threescore <- GetPCScores(humpangorMod)[,1:3]
+threescore <- GetPCScores(humpangorMod10)[,1:3]
 myscores <- NULL
-for (i in 1:100) myscores <- rbind(myscores,ComputeCoefficients(humpanMod10, DrawSample(humpanMod10)))
+for (i in 1:100) myscores <- rbind(myscores,ComputeCoefficients(humpangorMod10, DrawSample(humpangorMod10)))
 
 allscores <- rbind(threescore,myscores[,1:3])
 groups <- c(rep("hum",nhum),rep("pan",npan),rep("gor",ngor))
