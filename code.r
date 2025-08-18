@@ -1,4 +1,3 @@
-loadmystuff()
 require(Morpho)
 require(Rvcg)
 require(mesheR)
@@ -12,11 +11,11 @@ predictorrow <- readRDS("./Data/predictorrow.RDS")
 
 
 ## load landmarks of extant taxa
-coxae_data_hum <- readRDS("./Data/coxae_data_hum.RDS")
+coxae_data_hum <- readRDS("./Data/coxae_data_homo.RDS")
 nhum <- dim(coxae_data_hum)[3]
 coxae_data_pan <- readRDS("./Data/coxae_data_pan.RDS")
 npan <- dim(coxae_data_pan)[3]
-coxae_data_gor <- readRDS("./Data/coxae_data_gor.RDS")
+coxae_data_gor <- readRDS("./Data/coxae_data_gorilla.RDS")
 ngor <- dim(coxae_data_gor)[3]
 
 
@@ -93,7 +92,7 @@ visualizePredict(predictedFossilsHumPanGor[[1]])
 ### load fossil surface meshes, registered to the SSMs
 fossilMatched <- list()
 testingMatched <- list.files("./matchedFossils/",full.names=T)
-for(i in 1:9) {    
+for(i in 1:5) {    
     fossilMatched[[i]] <- vcgImport(testingMatched[grep(dimnames(fossilArray)[[3]][i],testingMatched)])
 }
 
@@ -134,7 +133,7 @@ boxplot(newErrorTable)
 
 
 ### Visualize Metaspecies by sampling from hum/pan/gor SSMs
-threescore <- GetPCScores(humpangorMod10)[,1:3]
+threescore <- GetPCScores(humpangorMod)[,1:3]
 myscores <- NULL
 for (i in 1:100) myscores <- rbind(myscores,ComputeCoefficients(humpangorMod10, DrawSample(humpangorMod10)))
 
