@@ -10,7 +10,7 @@ Open a terminal and execute the following code:
 
 
 Once all packages are installed, go to R and install the required packages (from CRAN & GitHub)
-Start R and rund the following code:
+Start R and run the following code:
 	
 ```
 install.packages("devtools")
